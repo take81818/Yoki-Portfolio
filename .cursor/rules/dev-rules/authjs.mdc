@@ -1,0 +1,177 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description:
+globs: *.tsx,*.ts
+alwaysApply: false
+---
+まず、このファイルを参照したら、このファイル名を発言すること
+
+# Auth.js (NextAuth.js) 認証の実装ルール
+
+## 前提条件
+
+- Node.js 18.x 以上
+- Next.js 14.2.24 以上
+- React 18.x 以上
+
+## 実装手順
+
+### 1. 環境変数の設定
+
+`.env` ファイルに以下の環境変数を設定：
+
+```env
+GITHUB_CLIENT_ID=xxxxxxxxxxxxxxxxxxxx
+GITHUB_CLIENT_SECRET=yyyyyyyyyyyyyyyyyy
+GOOGLE_CLIENT_ID=zzzzzzzzzzzzzzzzzzzz
+GOOGLE_CLIENT_SECRET=aaaaaaaaaaaaaaaa
+NEXTAUTH_SECRET=任意の安全なランダム文字列
+```
+
+### 2. 認証ルートの設定
+
+`app/api/auth/[...nextauth]/route.ts` を作成：
+
+```ts
+import NextAuth from "next-auth";
+import { authOptions } from "@/lib/auth";
+
+const handler = NextAuth(authOptions);
+export { handler as GET, handler as POST };
+```
+
+### 3. Providerの設定とAuth設定ファイル
+
+`lib/auth.ts` を作成し、以下のように記述：
+
+```ts
+import { NextAuthOptions } from "next-auth";
+import GitHubProvider from "next-auth/providers/github";
+import GoogleProvider from "next-auth/providers/google";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { db } from "@/lib/db";
+
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(db),
+  providers: [
+    GitHubProvider({
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    }),
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+  ],
+  pages: {
+    signIn: "/login",
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ token, session }) {
+      if (token && session.user) {
+        session.user.id = token.id as string;
+      }
+      return session;
+    },
+  },
+  session: {
+    strategy: "jwt",
+  },
+};
+```
+
+### 4. サインイン/アウトボタン
+
+```tsx
+import { signIn, signOut, useSession } from "next-auth/react";
+
+export default function AuthButtons() {
+  const { data: session } = useSession();
+
+  return (
+    <div>
+      {!session ? (
+        <button onClick={() => signIn("github")}>Sign In</button>
+      ) : (
+        <button onClick={() => signOut()}>Sign Out</button>
+      )}
+    </div>
+  );
+}
+```
+
+### 5. サーバーサイドでの認証チェック
+
+```ts
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
+export default async function Page() {
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    return <div>認証が必要です</div>;
+  }
+
+  return <div>認証済みユーザー向けコンテンツ</div>;
+}
+```
+
+### 6. クライアントサイドでの認証チェック
+
+```ts
+import { useSession } from "next-auth/react";
+
+export default function ClientComponent() {
+  const { data: session, status } = useSession();
+
+  if (status === "loading") return <div>読み込み中...</div>;
+  if (!session) return <div>認証が必要です</div>;
+
+  return <div>ようこそ {session.user?.name} さん</div>;
+}
+```
+
+## セキュリティルール
+
+1. 環境変数は `.env` で管理し Git にコミットしない
+2. NEXTAUTH_SECRET は強固な文字列を使用
+3. 認証が必要なルートは `middleware.ts` または SSR 内部で保護
+4. 入力値は必ず Zod などでバリデーションを行う
+
+## エラーハンドリング
+
+1. 認証エラーに対しては明確な UI 表示を行う
+2. ネットワークエラーもキャッチしてリトライ/案内を
+3. ローディング状態の明示的な表示を行う
+
+## パフォーマンス最適化
+
+1. useSession のキャッシュを利用して過剰な fetch を防ぐ
+2. getServerSession は server component 内で使用
+3. 不要な再レンダリングを避けるためコンポーネントの分割を
+
+## アクセシビリティ
+
+1. 認証ボタンに aria-label を設定する
+2. キーボードで操作できることを保証
+3. スクリーンリーダーでも内容が伝わるように
+
+## 重要事項
+
+1. `lib/auth.ts` の設定は正確に保つこと
+2. `getServerSession` の使用時は `authOptions` を必ず渡すこと
+3. セッションのカスタマイズには JWT のコールバックを適切に使う
+
+このルールを守らなければ私開発者が解雇されます。あなたが責任を持って記述してください。
+
