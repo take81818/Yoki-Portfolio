@@ -7,7 +7,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Link from "next/link";
-import { X } from "lucide-react";
 import Image from "next/image";
 
 export default function Home() {
@@ -18,20 +17,24 @@ export default function Home() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="mx-auto max-w-[64rem] text-center">
             <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl md:text-7xl">
-              YOKI'S　<span className="text-yellow-400">PORTFOLIO</span>
+              YOKI&apos;S　<span className="text-yellow-400">PORTFOLIO</span>
             </h1>
             <p className="mt-6 text-lg text-zinc-400 md:text-xl">
               フルスタックの個人開発を行う大学生のポートフォリオサイト
             </p>
-            <div className="mt-10 flex justify-center gap-x-6">
-              <Button
-                asChild
-                size="lg"
-                className="bg-white text-black hover:bg-white/90 hover:shadow-[0_0_15px_rgba(250,204,21,0.3)] transition-all duration-300"
-              >
-                <Link href="/projects">プロジェクトを見る</Link>
-              </Button>
-            </div>
+          </div>
+        </div>
+
+        {/* プロジェクトボタン - セクション下部に配置 */}
+        <div className="container mx-auto px-4 relative z-10 mt-16 md:mt-24">
+          <div className="mx-auto max-w-[64rem] text-center">
+            <Button
+              asChild
+              size="lg"
+              className="bg-white text-black hover:bg-white/90 hover:shadow-[0_0_15px_rgba(250,204,21,0.3)] transition-all duration-300"
+            >
+              <Link href="/projects">プロジェクトを見る</Link>
+            </Button>
           </div>
         </div>
 
@@ -79,16 +82,14 @@ export default function Home() {
                 variant="outline"
                 size="sm"
                 asChild
-                className="border-zinc-700 hover:border-yellow-400/50 hover:bg-yellow-400/5 hover:shadow-[0_0_10px_rgba(250,204,21,0.1)] transition-all duration-300 px-4 py-2"
+                className="border-zinc-700 hover:border-yellow-400/50 hover:bg-yellow-400/5 hover:shadow-[0_0_10px_rgba(250,204,21,0.1)] transition-all duration-300"
               >
                 <Link
                   href="https://x.com/menemgxR4mN2KQc"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center"
                 >
-                  
-                  <span className="font-medium">X（旧Twitter）</span>
+                  X
                 </Link>
               </Button>
             </div>
